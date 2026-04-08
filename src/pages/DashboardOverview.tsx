@@ -1,61 +1,113 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { StatCard } from "@/components/StatCard";
-import { DateFilterBar } from "@/components/DateFilterBar";
+import { DashboardLayout } from "@/components/common/DashboardLayout";
+import { StatCard } from "@/components/common/StatCard";
+import { DateFilterBar } from "@/components/common/DateFilterBar";
 import { useDateFilter } from "@/hooks/useDateFilter";
-import { employees, employers, jobPostings, monthlyRevenue, planDistribution } from "@/lib/mock-data";
-import { Users, Building2, DollarSign, Briefcase } from "lucide-react";
-import { useMemo } from "react";
-import { RevenueChart } from "@/components/dashboard/RevenueChart";
+import { Users, Building2, Briefcase, IndianRupee } from "lucide-react";
 import { PlanDistribution } from "@/components/dashboard/PlanDistribution";
 import { RecentEmployees } from "@/components/dashboard/RecentEmployees";
 import { RecentJobs } from "@/components/dashboard/RecentJobs";
+import { useGetDashboardOverview } from "@/service/overview/useOverview";
+import PageLoader from "@/components/loaders/PageLoader";
+import Error from "@/components/loaders/Error";
+
+
+
 
 export default function DashboardOverview() {
-  const { filter, setPreset, setCustomRange, filterByDate } = useDateFilter();
 
-  const filteredEmployees = useMemo(() => filterByDate(employees, "joinDate"), [filterByDate]);
-  const filteredEmployers = useMemo(() => filterByDate(employers, "joinDate"), [filterByDate]);
-  const filteredJobs = useMemo(() => filterByDate(jobPostings, "postedDate"), [filterByDate]);
 
-  const totalEmployees = filteredEmployees.length;
-  const totalEmployers = filteredEmployers.length;
-  const totalRevenue = filteredEmployees.reduce((sum, e) => sum + e.planPrice, 0) + filteredEmployers.reduce((sum, e) => sum + e.planPrice, 0);
-  const totalJobs = filteredJobs.filter((j) => j.status === "active").length;
 
-  const pieColors = ["hsl(20, 10%, 55%)", "hsl(200, 80%, 50%)", "hsl(24, 95%, 53%)"];
-  const pieData = planDistribution.map((p) => ({
-    name: p.name,
-    value: filteredEmployees.filter(e => e.plan === p.name.toLowerCase()).length + filteredEmployers.filter(e => e.plan === p.name.toLowerCase()).length,
-  }));
+  // Date Filter
+  const { filter, setPreset, setCustomRange } = useDateFilter();
+
+
+
+  // Get Dashboard Overview API
+  const { data: dashboardOverview, isLoading, error } = useGetDashboardOverview(filter);
+
+
+
+  // Loading UI
+  if (isLoading) {
+    return (
+      <PageLoader message="Gathering the latest dashboard insights" title="Loading Analytics..." />
+    );
+  }
+
+
+  // Error UI
+  if (error) {
+    return (
+      <Error />
+    );
+  }
+
+
+  // Pie Chart Colors
+  const pieColors = ["#3B82F6", "#8B5CF6", "#EC4899"];
+
+
+  // Pie Chart Data
+  const pieData = [
+    { name: "Free", value: dashboardOverview?.free || 0 },
+    { name: "Standard", value: dashboardOverview?.standard || 0 },
+    { name: "Premium", value: dashboardOverview?.premium || 0 },
+  ];
+
 
   return (
+
+
     <DashboardLayout>
+
+
       <div className="space-y-6">
+
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
           <div>
             <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">Dashboard Overview</h1>
             <p className="text-muted-foreground mt-1">Welcome back! Here's what's happening.</p>
           </div>
+
           <DateFilterBar preset={filter.preset} from={filter.from} to={filter.to} onPresetChange={setPreset} onCustomRangeChange={setCustomRange} />
+
         </div>
+
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Employees" value={totalEmployees} change="+12%" changeType="positive" icon={Users} iconColor="hsl(200, 80%, 50%)" delay={0} />
-          <StatCard title="Total Employers" value={totalEmployers} change="+8%" changeType="positive" icon={Building2} iconColor="hsl(150, 60%, 45%)" delay={0.1} />
-          <StatCard title="Total Revenue" value={`$${totalRevenue.toFixed(2)}`} change="+24%" changeType="positive" icon={DollarSign} iconColor="hsl(24, 95%, 53%)" delay={0.2} />
-          <StatCard title="Active Jobs" value={totalJobs} change="+5" changeType="positive" icon={Briefcase} iconColor="hsl(280, 65%, 55%)" delay={0.3} />
+
+          <StatCard title="Total Employees" value={dashboardOverview?.total_employees || 0} icon={Users} iconColor="hsl(200, 80%, 50%)" delay={0} />
+
+          <StatCard title="Total Employers" value={dashboardOverview?.total_employers || 0} icon={Building2} iconColor="hsl(24, 95%, 53%)" delay={0.1} />
+
+          <StatCard title="Total Revenue" value={`₹ ${(dashboardOverview?.total_revenue || 0).toLocaleString()}`} icon={IndianRupee} iconColor="hsl(150, 60%, 45%)" delay={0.2} />
+
+          <StatCard title="Active Jobs" value={dashboardOverview?.active_jobs || 0} icon={Briefcase} iconColor="hsl(280, 65%, 55%)" delay={0.3} />
+
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <RevenueChart data={monthlyRevenue} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
           <PlanDistribution data={pieData} colors={pieColors} />
         </div>
 
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RecentEmployees employees={filteredEmployees.slice(0, 5) as any[]} />
-          <RecentJobs jobs={filteredJobs.slice(0, 5) as any[]} />
+
+          <RecentEmployees employees={dashboardOverview?.recent_employees || []} />
+
+          <RecentJobs jobs={dashboardOverview?.recent_jobs || []} />
+
         </div>
+
       </div>
+
     </DashboardLayout>
+
+
   );
+
+
 }

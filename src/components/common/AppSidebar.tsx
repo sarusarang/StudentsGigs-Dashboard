@@ -4,11 +4,10 @@ import {
   Building2,
   Briefcase,
   DollarSign,
-  Settings,
-  HelpCircle,
+
 } from "lucide-react";
 
-import { NavLink } from "@/components/NavLink";
+import { NavLink } from "@/components/common/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
