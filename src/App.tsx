@@ -1,34 +1,58 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import LoginPage from "./pages/LoginPage";
-import DashboardOverview from "./pages/DashboardOverview";
-import UsersPage from "./pages/UsersPage";
-import JobPostingsPage from "./pages/JobPostingsPage";
-import RevenuePage from "./pages/RevenuePage";
-import NotFound from "./pages/NotFound";
+import { AuthGuard, GuestGuard } from "@/components/common/AuthGuard";
+import PageLoader from "./components/loaders/PageLoader";
 
-const queryClient = new QueryClient();
+
+
+// Lazy load all the pages
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const DashboardOverview = lazy(() => import("./pages/DashboardOverview"));
+const UsersPage = lazy(() => import("./pages/UsersPage"));
+const JobPostingsPage = lazy(() => import("./pages/JobPostingsPage"));
+const RevenuePage = lazy(() => import("./pages/RevenuePage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+
+
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/dashboard" element={<DashboardOverview />} />
-          <Route path="/dashboard/users" element={<UsersPage />} />
-          <Route path="/dashboard/jobs" element={<JobPostingsPage />} />
-          <Route path="/dashboard/revenue" element={<RevenuePage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+
+
+  <Suspense fallback={<PageLoader title="Loading..." message="Getting things ready..." />}>
+
+    <Toaster />
+
+    <Sonner />
+
+    <Routes>
+
+      <Route element={<GuestGuard />}>
+
+        <Route path="/" element={<LoginPage />} />
+
+      </Route>
+
+      <Route element={<AuthGuard />}>
+
+        <Route path="/dashboard" element={<DashboardOverview />} />
+        <Route path="/dashboard/users" element={<UsersPage />} />
+        <Route path="/dashboard/jobs" element={<JobPostingsPage />} />
+        <Route path="/dashboard/revenue" element={<RevenuePage />} />
+
+      </Route>
+
+      <Route path="*" element={<NotFound />} />
+
+    </Routes>
+
+
+  </Suspense>
+
+
+
 );
 
 export default App;
