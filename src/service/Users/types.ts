@@ -23,6 +23,7 @@ export interface EmployeeDashboardResponse {
     total_pages: number;
     current_page: number;
     results: Employee[];
+    download_url: string;
 
 }
 
@@ -48,6 +49,7 @@ export interface EmployerDashboardResponse {
     total_pages: number;
     current_page: number;
     results: Employer[];
+    download_url: string;
 
 }
 

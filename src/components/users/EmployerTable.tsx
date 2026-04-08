@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { TableSkeleton } from "@/components/loaders/TableSkeleton";
 import { UserTablePagination } from "@/components/users/UserTablePagination";
 import { Employer, EmployerDashboardResponse } from "@/service/Users/types";
-import { SearchX } from "lucide-react";
-
+import { SearchX, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 
 
@@ -36,6 +36,31 @@ export function EmployerTable({ data, isFetching, currentPage, onPrev, onNext }:
 
 
     <>
+
+      {/* Download Alert */}
+      {data?.download_url && (
+        <motion.div
+           initial={{ opacity: 0, y: -10 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="flex flex-col sm:flex-row items-center justify-between bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6"
+        >
+          <div className="mb-4 sm:mb-0 text-center sm:text-left">
+            <h3 className="text-sm font-semibold text-foreground flex items-center justify-center sm:justify-start gap-2">
+              <Download className="w-4 h-4 text-primary" />
+              Export Employer Data
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Download the complete employer list as a CSV file for your offline records and reporting.
+            </p>
+          </div>
+          <a href={data.download_url} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all duration-300">
+              <Download className="w-4 h-4" />
+              Download CSV
+            </Button>
+          </a>
+        </motion.div>
+      )}
 
       <div className="overflow-x-auto">
 
